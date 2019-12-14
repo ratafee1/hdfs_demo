@@ -16,10 +16,43 @@ import java.net.URL;
 
 public class HdfsApiDemo {
 
+
+
+    //    小文件的合并
+    @Test
+
+    public void mergeFile() throws URISyntaxException, IOException, InterruptedException {
+//        获取filesystem（分布式文件系统）
+        final FileSystem fileSystem = FileSystem.get(new URI( "hdfs://node01:8020"), new Configuration(),"root");
+
+//        获取hdfs大文件的输出流
+        final FSDataOutputStream fsDataOutputStream = fileSystem.create(new Path("/big_txt.txt"));
+//        获取本地文件系统
+        final LocalFileSystem local = FileSystem.getLocal(new Configuration());
+
+//        获取本地文件夹下所有文件的详情
+        final FileStatus[] fileStatuses = local.listStatus(new Path("D:\\input"));
+
+
+//        遍历每个文件，获取每个文件的输入流
+        for( FileStatus fileStatus :fileStatuses){
+            final FSDataInputStream inputstream = local.open(fileStatus.getPath());
+//        将小文件的数据复制到大文件
+            IOUtils.copy(inputstream,fsDataOutputStream);
+            IOUtils.closeQuietly(inputstream);
+        }
+
+//        关闭流
+        IOUtils.closeQuietly(fsDataOutputStream);
+        local.close();
+        fileSystem.close();
+    }
+
+
 //    实现文件的上传
     @Test
-    public void uploadFile() throws URISyntaxException, IOException {
-        final FileSystem fileSystem = FileSystem.get(new URI( "hdfs://node01:8020"), new Configuration());
+    public void uploadFile() throws URISyntaxException, IOException, InterruptedException {
+        final FileSystem fileSystem = FileSystem.get(new URI( "hdfs://node01:8020"), new Configuration(),"root");
 //  调用方法,实现上传
         fileSystem.copyFromLocalFile(new Path("D:\\set.xml"), new Path("/"));
 //        关闭filesystem
